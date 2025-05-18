@@ -1,0 +1,55 @@
+name: Register Deployment with LinearB
+description: 'Sends an API request for registering deployments with LinearB.'
+branding:
+  icon: 'plus-circle'
+  color: 'white'
+
+inputs:
+  api_token:
+    description: "API token for authenticating with the LinearB API"
+    required: true
+  repo_url:
+    description: "The URL of the repository (e.g. https://github.com/org/repo.git)"
+    required: true
+  ref_name:
+    description: "Ref name of the release, accepts any Git ref (i.e. commit short or long sha/tag name)"
+    required: true
+  timestamp:
+    description: "Timestamp in ISO 8601 format (e.g. 2022-03-14T22:23:34Z)"
+    required: false
+  stage:
+    description: "The key of the custom pre-deployment stage"
+    required: false
+  services:
+    description: "The list of LinearB services names (e.g. 'service1,service2')"
+    required: false
+
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install Dependencies
+      run: pip install -q -r requirements.txt
+      shell: bash
+      working-directory: ${{ github.action_path }}
+    
+    - name: Pass Inputs to Shell
+      run: |
+          echo "API_TOKEN=${{ inputs.api_token }}" >> $GITHUB_ENV
+          echo "REPO_URL=${{ inputs.repo_url }}" >> $GITHUB_ENV
+          echo "REF_NAME=${{ inputs.ref_name }}" >> $GITHUB_ENV
+          echo "TIMESTAMP=${{ inputs.timestamp }}" >> $GITHUB_ENV
+          echo "STAGE=${{ inputs.stage }}" >> $GITHUB_ENV
+          echo "SERVICES=${{ inputs.services }}" >> $GITHUB_ENV
+      shell: bash
+    
+    - name: Register Deployment with LinearB
+      id: register_deployment_with_linearb
+      run: python main.py
+      shell: bash
+      working-directory: ${{ github.action_path }}
